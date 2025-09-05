@@ -1,0 +1,99 @@
+from torch import return_types
+from transformers import pipeline
+from selenium.webdriver.common.by import By
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+from selenium.common.exceptions import NoSuchElementException
+import pickle
+
+with open("credentials.txt", "r") as credentials:
+    mail_address, password = credentials.readlines()
+
+url = "https://meet.google.com/noo-wned-qkp"
+
+
+def account_exists(driver):
+    try:
+        driver.find_element(By.CLASS_NAME, "lPxAeb").click()
+        return True
+    except NoSuchElementException:
+        return False
+
+
+# source: https://www.geeksforgeeks.org/python/automating-google-meet-using-selenium-in-python/
+# https://stackoverflow.com/questions/15058462/how-to-save-and-load-cookies-using-python-selenium-webdriver
+
+opt = Options()
+opt.add_argument("--disable-blink-features=AutomationControlled")
+opt.add_argument("--start-maximized")
+opt.add_experimental_option(
+    "prefs",
+    {
+        "profile.default_content_setting_values.media_stream_mic": 1,
+        "profile.default_content_setting_values.media_stream_camera": 1,
+        "profile.default_content_setting_values.geolocation": 0,
+        "profile.default_content_setting_values.notifications": 1,
+    },
+)
+# opt.add_experimental_option("detach", True)
+
+opt.add_argument("user-data-dir=selenium")  # hoping this makes me not log in everytime
+
+driver = webdriver.Chrome(options=opt)
+
+driver.get(url)
+
+driver.find_element(By.CLASS_NAME, "uArJ5e").click()
+
+if account_exists(driver):
+    print("seems like u hv logged in b4")
+    driver.find_element(By.CLASS_NAME, "lPxAeb").click()
+
+    driver.implicitly_wait(10)
+
+    driver.find_element(By.NAME, "Passwd").send_keys(password)
+    driver.implicitly_wait(10)
+    driver.find_element(By.ID, "passwordNext").click()
+else:
+    print("hasnt seems like u hv logged in at all")
+    driver.find_element(By.ID, "identifierId").send_keys(mail_address)
+    driver.find_element(By.ID, "identifierNext").click()
+
+    driver.implicitly_wait(10)
+
+    driver.find_element(By.NAME, "Passwd").send_keys(password)
+    driver.implicitly_wait(10)
+    driver.find_element(By.ID, "passwordNext").click()
+
+
+#
+# driver.find_element(By.CLASS_NAME, "UywwFc-RLmnJb").click()
+# driver.implicitly_wait(5)
+
+
+# summarizer = pipeline("summarization", model="Falconsai/text_summarization")
+
+while 1:
+    try:
+        captions = [x.text for x in driver.find_elements(By.CLASS_NAME, "ygicle")]
+        print(captions)
+    except NoSuchElementException:
+        pass
+
+ARTICLE = """ 
+Wikipedia[c] is a free online encyclopedia written and maintained by a community of volunteers, known as Wikipedians, through open collaboration and the wiki software MediaWiki. Founded by Jimmy Wales and Larry Sanger in 2001, Wikipedia has been hosted since 2003 by the Wikimedia Foundation, an American nonprofit organization funded mainly by donations from readers.[2] Wikipedia is the largest and most-read reference work in history.[3][4]
+
+Initially available only in English, Wikipedia exists in over 340 languages and is the world's ninth most visited website. The English Wikipedia, with over 7 million articles, remains the largest of the editions, which together comprise more than 65 million articles and attract more than 1.5 billion unique device visits and 13 million edits per month (about 5 edits per second on average) as of April 2024.[W 1] As of May 2025, over 25% of Wikipedia's traffic comes from the United States, while Japan, the United Kingdom, Germany and Russia each account for around 5%.[needs update][5]
+
+Wikipedia has been praised for enabling the democratization of knowledge, its extensive coverage, unique structure, and culture. Wikipedia has been censored by some national governments, ranging from specific pages to the entire site.[6][7] Wikipedia's volunteer editors have written extensively on a wide variety of topics, but the encyclopedia has also been criticized for systemic bias, such as a gender bias against women and a geographical bias against the Global South.[8][9] While the reliability of Wikipedia was frequently criticized in the 2000s, it has improved over time, receiving greater praise from the late 2010s onward.[3][10][11] Articles on breaking news are often accessed as sources for up-to-date information about those events.[12][13]
+"""
+
+# print(
+#     summarizer(
+#         ARTICLE,
+#         max_new_tokens=len(ARTICLE),
+#         max_length=len(ARTICLE),
+#         min_new_tokens=100,
+#         do_sample=False,
+#     )
+# ]]]]]]]]]]]]]]]] )
